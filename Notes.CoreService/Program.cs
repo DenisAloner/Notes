@@ -21,7 +21,7 @@ try
     builder.Services
         .AddValidatorsFromAssembly(Assembly.GetExecutingAssembly(), ServiceLifetime.Singleton)
         .RegisterOptions<CoreServiceOptions, CoreServiceOptionsValidator>(builder.Configuration)
-        .RegisterDbContextFactory()
+        .RegisterDbContextFactory(Constants.Schema)
         .AddMediatR(configuration =>
         {
             configuration.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
@@ -38,6 +38,8 @@ try
         var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
         var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
         options.IncludeXmlComments(xmlPath, true);
+
+        options.OperationFilter<ErrorOperationFilter>();
     });
 
     builder.Host.UseSerilog((context, services, configuration) => configuration

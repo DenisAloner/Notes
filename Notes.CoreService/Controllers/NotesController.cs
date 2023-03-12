@@ -2,9 +2,8 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Notes.CoreService.DataAccess.Entities;
 using Notes.CoreService.Domain.Notes;
-using System.Net;
 using System.Net.Mime;
-using Swashbuckle.AspNetCore.Annotations;
+using Notes.CoreService.Abstractions;
 
 namespace Notes.CoreService.Controllers;
 
@@ -25,23 +24,22 @@ public class NotesController : ControllerBase
     /// <summary>
     /// Получение списка заметок
     /// </summary>
+    /// <response code="200">Возвращает список заметок</response>
     [HttpGet]
-    [SwaggerResponse((int)HttpStatusCode.OK, null, typeof(IReadOnlyCollection<Note>), MediaTypeNames.Application.Json)]
-    [SwaggerResponse((int)HttpStatusCode.InternalServerError, null, typeof(string), MediaTypeNames.Text.Plain)]
-    public async Task<IActionResult> GetNotesAsync()
+    [Produces(MediaTypeNames.Application.Json)]
+    public async Task<ActionResult<Page<Note>>> GetNotesAsync([FromQuery] GetNotesInput input)
     {
-        var response = await _mediator.Send(new GetNotesQuery());
+        var response = await _mediator.Send(new GetNotesQuery { Input = input });
         return Ok(response);
     }
 
     /// <summary>
     /// Создание заметки
     /// </summary>
+    /// <response code="200">Возвращает идентификатор созданной заметки</response>
     [HttpPost]
-    [SwaggerResponse((int)HttpStatusCode.OK, null, typeof(Guid), MediaTypeNames.Text.Plain)]
-    [SwaggerResponse((int)HttpStatusCode.BadRequest, null, typeof(string), MediaTypeNames.Text.Plain)]
-    [SwaggerResponse((int)HttpStatusCode.InternalServerError, null, typeof(string), MediaTypeNames.Text.Plain)]
-    public async Task<IActionResult> CreateNoteAsync([FromBody] CreateNoteInput input)
+    [Produces(MediaTypeNames.Text.Plain)]
+    public async Task<ActionResult<Guid>> CreateNoteAsync([FromBody] CreateNoteInput input)
     {
         var response = await _mediator.Send(new CreateNoteCommand { Input = input });
         return Ok(response);

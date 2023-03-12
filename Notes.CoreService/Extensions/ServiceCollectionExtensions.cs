@@ -13,7 +13,8 @@ public static class ServiceCollectionExtensions
         IConfiguration configuration
     )
         where TOptions : class
-        where TValidator : AbstractValidator<TOptions> {
+        where TValidator : AbstractValidator<TOptions>
+    {
         services
             .AddOptions<TOptions>()
             .Bind(configuration.GetSection(typeof(TOptions).Name))
@@ -28,8 +29,10 @@ public static class ServiceCollectionExtensions
     }
 
     public static IServiceCollection RegisterDbContextFactory(
-        this IServiceCollection services
-    ) {
+        this IServiceCollection services,
+        string schema
+    )
+    {
         services.AddPooledDbContextFactory<ApplicationDbContext>(
             (provider, options) =>
             {
@@ -37,7 +40,7 @@ public static class ServiceCollectionExtensions
                 var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
                 options
                     .UseNpgsql(coreServiceOptions.ConnectionString,
-                        builder => { builder.MigrationsHistoryTable("migrations_history", Constants.Schema); })
+                        builder => { builder.MigrationsHistoryTable("migrations_history", schema); })
                     .UseLoggerFactory(loggerFactory)
                     .UseSnakeCaseNamingConvention();
             });

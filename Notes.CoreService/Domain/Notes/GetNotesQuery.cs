@@ -1,15 +1,39 @@
-﻿using MediatR;
+﻿using FluentValidation;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Notes.CoreService.Abstractions;
 using Notes.CoreService.DataAccess;
 using Notes.CoreService.DataAccess.Entities;
+using Notes.CoreService.Extensions;
 
 namespace Notes.CoreService.Domain.Notes;
 
-public class GetNotesQuery : IRequest<IReadOnlyCollection<Note>>
+/// <summary>
+/// Данные для получения списка заметок
+/// </summary>
+public class GetNotesInput : PageInput
 {
 }
 
-public class GetNotesQueryHandler : IRequestHandler<GetNotesQuery, IReadOnlyCollection<Note>>
+public class GetNotesInputValidator : PageInputValidator<GetNotesInput>
+{
+}
+
+public class GetNotesQuery : IRequest<Page<Note>>
+{
+    public required GetNotesInput Input { get; set; }
+}
+
+public class GetNotesQueryValidator : AbstractValidator<GetNotesQuery>
+{
+    public GetNotesQueryValidator(GetNotesInputValidator getNotesInputValidator)
+    {
+        RuleFor(x => x.Input)
+            .SetValidator(getNotesInputValidator);
+    }
+}
+
+public class GetNotesQueryHandler : IRequestHandler<GetNotesQuery, Page<Note>>
 {
     private readonly IDbContextFactory<ApplicationDbContext> _factory;
 
@@ -18,9 +42,9 @@ public class GetNotesQueryHandler : IRequestHandler<GetNotesQuery, IReadOnlyColl
         _factory = factory;
     }
 
-    public async Task<IReadOnlyCollection<Note>> Handle(GetNotesQuery request, CancellationToken cancellationToken)
+    public async Task<Page<Note>> Handle(GetNotesQuery query, CancellationToken cancellationToken)
     {
         await using var dbContext = await _factory.CreateDbContextAsync(cancellationToken);
-        return await dbContext.Notes.ToListAsync(cancellationToken: cancellationToken);
+        return await dbContext.Notes.ToPageAsync(query.Input.PageNumber, query.Input.PageSize, cancellationToken);
     }
 }
