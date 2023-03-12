@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using Notes.CoreService.Exceptions;
 
 namespace Notes.CoreService.Middlewares;
 
@@ -23,7 +24,10 @@ public class ErrorHandlerMiddleware
             string message;
             switch (error)
             {
-                
+                case DomainException exception:
+                    message = exception.Message;
+                    response.StatusCode = (int)exception.GetHttpStatusCode;
+                    break;
                 case FluentValidation.ValidationException exception:
                     message = exception.Message;
                     response.StatusCode = (int)HttpStatusCode.BadRequest;

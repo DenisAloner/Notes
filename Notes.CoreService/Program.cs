@@ -36,7 +36,11 @@ try
             options.LowercaseUrls = true;
             options.LowercaseQueryStrings = true;
         })
-        .AddControllers();
+        .AddControllers()
+        .AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.Converters.Add(new OptionalStringJsonConverter());
+        });
 
     builder.Services.AddSwaggerGen(options =>
     {

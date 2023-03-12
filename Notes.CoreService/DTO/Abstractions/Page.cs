@@ -1,4 +1,4 @@
-﻿namespace Notes.CoreService.Abstractions;
+﻿namespace Notes.CoreService.DTO.Abstractions;
 
 public class Page<T>
 {

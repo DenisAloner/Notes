@@ -3,14 +3,13 @@ using Microsoft.AspNetCore.Mvc;
 using Notes.CoreService.DataAccess.Entities;
 using Notes.CoreService.Domain.Notes;
 using System.Net.Mime;
-using Notes.CoreService.Abstractions;
+using Notes.CoreService.DTO.Abstractions;
 
 namespace Notes.CoreService.Controllers;
 
 /// <summary>
 /// Методы для работы с заметками
 /// </summary>
-[ApiController]
 [Route("[controller]")]
 public class NotesController : ControllerBase
 {
@@ -43,5 +42,18 @@ public class NotesController : ControllerBase
     {
         var response = await _mediator.Send(new CreateNoteCommand { Input = input });
         return Ok(response);
+    }
+
+    /// <summary>
+    /// Обновление заметки
+    /// </summary>
+    [HttpPatch("{id:guid}")]
+    public async Task<IActionResult> PatchNoteAsync(
+        [FromRoute] Guid id,
+        [FromBody] PatchNoteInput input
+    )
+    {
+        await _mediator.Send(new PatchNoteCommand { Id = id, Input = input });
+        return Ok();
     }
 }

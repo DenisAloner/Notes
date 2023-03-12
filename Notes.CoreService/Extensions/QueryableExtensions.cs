@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Notes.CoreService.Abstractions;
+using Notes.CoreService.DTO.Abstractions;
 
 namespace Notes.CoreService.Extensions;
 

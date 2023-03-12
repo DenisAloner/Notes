@@ -1,9 +1,10 @@
 ﻿using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Notes.CoreService.Abstractions;
 using Notes.CoreService.DataAccess;
 using Notes.CoreService.DataAccess.Entities;
+using Notes.CoreService.DTO;
+using Notes.CoreService.DTO.Abstractions;
 using Notes.CoreService.Extensions;
 
 namespace Notes.CoreService.Domain.Notes;

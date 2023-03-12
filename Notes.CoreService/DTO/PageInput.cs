@@ -1,7 +1,7 @@
-﻿using System.ComponentModel;
-using FluentValidation;
+﻿using FluentValidation;
+using System.ComponentModel;
 
-namespace Notes.CoreService.Abstractions;
+namespace Notes.CoreService.DTO;
 
 public class PageInput
 {
@@ -21,8 +21,7 @@ public class PageInput
 public class PageInputValidator<T> : AbstractValidator<T>
     where T : PageInput
 {
-    public PageInputValidator()
-    {
+    public PageInputValidator() {
         RuleFor(x => x.PageNumber)
             .GreaterThanOrEqualTo(1);
 
