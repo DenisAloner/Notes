@@ -25,6 +25,7 @@ public class NotesController : ControllerBase
     /// </summary>
     /// <response code="200">Возвращает список заметок</response>
     [HttpGet]
+    [Consumes(MediaTypeNames.Application.Json)]
     [Produces(MediaTypeNames.Application.Json)]
     public async Task<ActionResult<Page<Note>>> GetNotesAsync([FromQuery] GetNotesInput input)
     {
@@ -37,6 +38,7 @@ public class NotesController : ControllerBase
     /// </summary>
     /// <response code="200">Возвращает идентификатор созданной заметки</response>
     [HttpPost]
+    [Consumes(MediaTypeNames.Application.Json)]
     [Produces(MediaTypeNames.Text.Plain)]
     public async Task<ActionResult<Guid>> CreateNoteAsync([FromBody] CreateNoteInput input)
     {
@@ -48,6 +50,7 @@ public class NotesController : ControllerBase
     /// Обновление заметки
     /// </summary>
     [HttpPatch("{id:guid}")]
+    [Consumes(MediaTypeNames.Application.Json)]
     public async Task<IActionResult> PatchNoteAsync(
         [FromRoute] Guid id,
         [FromBody] PatchNoteInput input
