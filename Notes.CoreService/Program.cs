@@ -30,7 +30,11 @@ try
         ;
 
     builder.Services
-        .AddRouting(options => options.LowercaseUrls = true)
+        .AddRouting(options =>
+        {
+            options.LowercaseUrls = true;
+            options.LowercaseQueryStrings = true;
+        })
         .AddControllers();
 
     builder.Services.AddSwaggerGen(options =>
@@ -40,6 +44,7 @@ try
         options.IncludeXmlComments(xmlPath, true);
 
         options.OperationFilter<ErrorOperationFilter>();
+        options.DescribeAllParametersInCamelCase();
     });
 
     builder.Host.UseSerilog((context, services, configuration) => configuration
