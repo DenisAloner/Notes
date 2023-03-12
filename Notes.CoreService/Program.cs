@@ -1,6 +1,7 @@
 using System.Reflection;
 using FluentValidation;
 using MediatR;
+using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using Notes.CoreService.DataAccess;
 using Notes.CoreService.Extensions;
@@ -45,7 +46,8 @@ try
 
         options.OperationFilter<ErrorOperationFilter>();
         options.DescribeAllParametersInCamelCase();
-    });
+    })
+        .AddFluentValidationRulesToSwagger();
 
     builder.Host.UseSerilog((context, services, configuration) => configuration
         .ReadFrom.Configuration(context.Configuration)
