@@ -24,7 +24,8 @@ public class CreateNoteInput
 
 public class CreateNoteInputValidator : AbstractValidator<CreateNoteInput>
 {
-    public CreateNoteInputValidator() {
+    public CreateNoteInputValidator()
+    {
         RuleFor(x => x.Title)
             .NotEmpty()
             .MaximumLength(256);
@@ -36,7 +37,18 @@ public class CreateNoteInputValidator : AbstractValidator<CreateNoteInput>
     }
 }
 
-public class CreateNoteCommand : IRequest<Guid>
+/// <summary>
+/// Данные о созданной заметке
+/// </summary>
+public class CreateNotePayload
+{
+    /// <summary>
+    /// Идентификатор заметки
+    /// </summary>
+    public required Guid Id { get; init; }
+}
+
+public class CreateNoteCommand : IRequest<CreateNotePayload>
 {
     public required CreateNoteInput Input { get; set; }
 }
@@ -50,7 +62,7 @@ public class CreateNoteCommandValidator : AbstractValidator<CreateNoteCommand>
     }
 }
 
-public class CreateNoteCommandHandler : IRequestHandler<CreateNoteCommand, Guid>
+public class CreateNoteCommandHandler : IRequestHandler<CreateNoteCommand, CreateNotePayload>
 {
     private readonly IDbContextFactory<ApplicationDbContext> _factory;
 
@@ -59,7 +71,7 @@ public class CreateNoteCommandHandler : IRequestHandler<CreateNoteCommand, Guid>
         _factory = factory;
     }
 
-    public async Task<Guid> Handle(CreateNoteCommand command, CancellationToken cancellationToken)
+    public async Task<CreateNotePayload> Handle(CreateNoteCommand command, CancellationToken cancellationToken)
     {
         await using var dbContext = await _factory.CreateDbContextAsync(cancellationToken);
 
@@ -76,6 +88,6 @@ public class CreateNoteCommandHandler : IRequestHandler<CreateNoteCommand, Guid>
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return note.Id;
+        return new CreateNotePayload { Id = note.Id };
     }
 }

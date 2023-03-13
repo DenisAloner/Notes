@@ -36,11 +36,11 @@ public class NotesController : ControllerBase
     /// <summary>
     /// Создание заметки
     /// </summary>
-    /// <response code="200">Возвращает идентификатор созданной заметки</response>
+    /// <response code="200">Возвращает данные о созданной заметки</response>
     [HttpPost]
     [Consumes(MediaTypeNames.Application.Json)]
-    [Produces(MediaTypeNames.Text.Plain)]
-    public async Task<ActionResult<Guid>> CreateNoteAsync([FromBody] CreateNoteInput input)
+    [Produces(MediaTypeNames.Application.Json)]
+    public async Task<ActionResult<CreateNotePayload>> CreateNoteAsync([FromBody] CreateNoteInput input)
     {
         var response = await _mediator.Send(new CreateNoteCommand { Input = input });
         return Ok(response);
