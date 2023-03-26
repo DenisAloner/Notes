@@ -1,19 +1,14 @@
-﻿namespace Notes.CoreService.DataAccess.Entities;
+﻿namespace Notes.CoreService.DTO;
 
 /// <summary>
 /// Заметка
 /// </summary>
-public class Note
+public class UserNote
 {
     /// <summary>
     /// Идентификатор заметки
     /// </summary>
     public Guid Id { get; set; }
-
-    /// <summary>
-    /// Идентификатор пользователя
-    /// </summary>
-    public Guid UserId { get; set; }
 
     /// <summary>
     /// Название заметки

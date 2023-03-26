@@ -12,6 +12,9 @@ public class NoteConfiguration:IEntityTypeConfiguration<Note>
             .HasKey(x => x.Id);
 
         builder
+            .HasIndex(x => x.UserId);
+
+        builder
             .Property(x => x.Id)
             .HasDefaultValueSql("gen_random_uuid()");
 
@@ -20,7 +23,7 @@ public class NoteConfiguration:IEntityTypeConfiguration<Note>
             .HasMaxLength(256);
 
         builder
-            .Property(x => x.Title)
+            .Property(x => x.Description)
             .HasMaxLength(2048);
     }
 }

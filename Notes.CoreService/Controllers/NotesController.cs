@@ -1,9 +1,12 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Notes.CoreService.DataAccess.Entities;
 using Notes.CoreService.Domain.Notes;
 using System.Net.Mime;
-using Notes.CoreService.DTO.Abstractions;
+using Mapster;
+using Microsoft.AspNetCore.Authorization;
+using Notes.CoreService.Exceptions;
+using Notes.CoreService.Extensions;
+using Notes.CoreService.DTO;
 
 namespace Notes.CoreService.Controllers;
 
@@ -11,6 +14,8 @@ namespace Notes.CoreService.Controllers;
 /// Методы для работы с заметками
 /// </summary>
 [Route("[controller]")]
+[Authorize]
+[ApiController]
 public class NotesController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -21,29 +26,19 @@ public class NotesController : ControllerBase
     }
 
     /// <summary>
-    /// Получение списка заметок
-    /// </summary>
-    /// <response code="200">Возвращает список заметок</response>
-    [HttpGet]
-    [Consumes(MediaTypeNames.Application.Json)]
-    [Produces(MediaTypeNames.Application.Json)]
-    public async Task<ActionResult<Page<Note>>> GetNotesAsync([FromQuery] GetNotesInput input)
-    {
-        var response = await _mediator.Send(new GetNotesQuery { Input = input });
-        return Ok(response);
-    }
-
-    /// <summary>
     /// Создание заметки
     /// </summary>
     /// <response code="200">Возвращает данные о созданной заметки</response>
     [HttpPost]
     [Consumes(MediaTypeNames.Application.Json)]
     [Produces(MediaTypeNames.Application.Json)]
-    public async Task<ActionResult<CreateNotePayload>> CreateNoteAsync([FromBody] CreateNoteInput input)
+    [Authorize(Roles = "User")]
+    public async Task<ActionResult<CreateNoteResponse>> CreateUserNoteAsync([FromBody] CreateNoteRequest request)
     {
+        var input = request.Adapt<CreateNoteInput>();
+        input.UserId = HttpContext.GetUserId();
         var response = await _mediator.Send(new CreateNoteCommand { Input = input });
-        return Ok(response);
+        return Ok(new CreateNoteResponse { Id = response.Id });
     }
 
     /// <summary>
@@ -51,12 +46,12 @@ public class NotesController : ControllerBase
     /// </summary>
     [HttpPatch("{id:guid}")]
     [Consumes(MediaTypeNames.Application.Json)]
-    public async Task<IActionResult> PatchNoteAsync(
-        [FromRoute] Guid id,
-        [FromBody] PatchNoteInput input
-    )
+    [Authorize(Roles = "User")]
+    public async Task<IActionResult> PatchNoteAsync(PatchNoteRequest request)
     {
-        await _mediator.Send(new PatchNoteCommand { Id = id, Input = input });
+        var currentUserId = HttpContext.GetUserId();
+        await _mediator.Send(new PatchNoteCommand
+            { ModifiedBy = currentUserId, Input = request.Adapt<PatchNoteInput>() });
         return Ok();
     }
 }

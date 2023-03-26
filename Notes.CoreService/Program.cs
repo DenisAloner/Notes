@@ -1,12 +1,16 @@
 using System.Reflection;
 using FluentValidation;
 using MediatR;
-using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Notes.CoreService.DataAccess;
+using Notes.CoreService.DataAccess.Entities;
 using Notes.CoreService.Extensions;
 using Notes.CoreService.Middlewares;
 using Notes.CoreService.Options;
+using Notes.CoreService.Repositories;
 using Notes.CoreService.Services;
 using Serilog;
 
@@ -16,11 +20,11 @@ Log.Logger = new LoggerConfiguration()
 
 try
 {
-
     var builder = WebApplication.CreateBuilder(args);
 
     builder.Services
         .AddValidatorsFromAssembly(Assembly.GetExecutingAssembly(), ServiceLifetime.Singleton)
+        .RegisterTypeMapping()
         .RegisterOptions<CoreServiceOptions, CoreServiceOptionsValidator>(builder.Configuration)
         .RegisterDbContextFactory(Constants.Schema)
         .AddMediatR(configuration =>
@@ -28,6 +32,8 @@ try
             configuration.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
             configuration.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         })
+        .AddSingleton<IRepository<Note>, NoteRepository>()
+        .RegisterSwagger(builder.Configuration)
         ;
 
     builder.Services
@@ -42,16 +48,19 @@ try
             options.JsonSerializerOptions.Converters.Add(new OptionalStringJsonConverter());
         });
 
-    builder.Services.AddSwaggerGen(options =>
-    {
-        var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-        var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-        options.IncludeXmlComments(xmlPath, true);
+    //builder.Services.AddCors();
 
-        options.OperationFilter<ErrorOperationFilter>();
-        options.DescribeAllParametersInCamelCase();
-    })
-        .AddFluentValidationRulesToSwagger();
+    builder.Services
+        .AddSingleton<IClaimsTransformation, KeyCloakClaimsTransformation>()
+        .ConfigureOptions<ConfigureJwtBearerOptions>()
+        .AddAuthentication()
+        .AddJwtBearer();
+
+
+    builder.Services.Configure<ApiBehaviorOptions>(options =>
+    {
+        options.SuppressInferBindingSourcesForParameters = true;
+    });
 
     builder.Host.UseSerilog((context, services, configuration) => configuration
         .ReadFrom.Configuration(context.Configuration)
@@ -68,11 +77,26 @@ try
 
     if (app.Environment.IsDevelopment())
     {
+        var clientId = app.Services.GetRequiredService<IOptions<KeyCloakOptions>>().Value.ClientId;
         app.UseSwagger();
-        app.UseSwaggerUI();
+        app.UseSwaggerUI(options =>
+        {
+            options.OAuthClientId(clientId);
+            options.OAuthUsePkce();
+        });
     }
 
     app.UseMiddleware<ErrorHandlerMiddleware>();
+
+    //app.UseCors(corsPolicyBuilder => corsPolicyBuilder.WithOrigins("localhost")
+    //    .AllowAnyHeader()
+    //    .AllowAnyMethod()
+    //    .AllowCredentials()
+    //);
+
+    app
+        .UseAuthentication()
+        .UseAuthorization();
 
     app.MapControllers();
 

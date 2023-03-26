@@ -3,52 +3,11 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Notes.CoreService.DataAccess;
 using Notes.CoreService.DataAccess.Entities;
+using Notes.CoreService.DTO;
 
 namespace Notes.CoreService.Domain.Notes;
 
-/// <summary>
-/// Данные для создания заметки
-/// </summary>
-public class CreateNoteInput
-{
-    /// <summary>
-    /// Название заметки
-    /// </summary>
-    public required string Title { get; set; }
-
-    /// <summary>
-    /// Описание заметки
-    /// </summary>
-    public string? Description { get; set; }
-}
-
-public class CreateNoteInputValidator : AbstractValidator<CreateNoteInput>
-{
-    public CreateNoteInputValidator()
-    {
-        RuleFor(x => x.Title)
-            .NotEmpty()
-            .MaximumLength(256);
-
-        RuleFor(x => x.Description)
-            .NotEmpty()
-            .MaximumLength(2048)
-            .When(x => x.Description != null);
-    }
-}
-
-/// <summary>
-/// Данные о созданной заметке
-/// </summary>
-public class CreateNotePayload
-{
-    /// <summary>
-    /// Идентификатор заметки
-    /// </summary>
-    public required Guid Id { get; init; }
-}
-
-public class CreateNoteCommand : IRequest<CreateNotePayload>
+public class CreateNoteCommand : IRequest<Note>
 {
     public required CreateNoteInput Input { get; set; }
 }
@@ -62,7 +21,7 @@ public class CreateNoteCommandValidator : AbstractValidator<CreateNoteCommand>
     }
 }
 
-public class CreateNoteCommandHandler : IRequestHandler<CreateNoteCommand, CreateNotePayload>
+public class CreateNoteCommandHandler : IRequestHandler<CreateNoteCommand, Note>
 {
     private readonly IDbContextFactory<ApplicationDbContext> _factory;
 
@@ -71,23 +30,22 @@ public class CreateNoteCommandHandler : IRequestHandler<CreateNoteCommand, Creat
         _factory = factory;
     }
 
-    public async Task<CreateNotePayload> Handle(CreateNoteCommand command, CancellationToken cancellationToken)
+    public async Task<Note> Handle(CreateNoteCommand command, CancellationToken cancellationToken)
     {
-        await using var dbContext = await _factory.CreateDbContextAsync(cancellationToken);
-
         var input = command.Input;
 
         var note = new Note
         {
+            UserId = input.UserId,
             Title = input.Title,
             Description = input.Description,
             Modified = DateTime.UtcNow
         };
 
+        await using var dbContext = await _factory.CreateDbContextAsync(cancellationToken);
         await dbContext.Notes.AddAsync(note, cancellationToken);
-
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return new CreateNotePayload { Id = note.Id };
+        return note;
     }
 }

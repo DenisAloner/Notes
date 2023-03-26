@@ -4,13 +4,51 @@ services:
     container_name: notes-postgres
     image: postgres:15.2
     environment:
-      POSTGRES_DB: "notes_db"
-      POSTGRES_USER: "postgres"
-      POSTGRES_PASSWORD: "12345"
+      POSTGRES_DB: notes_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12345
     ports:
-      - "5432:5432"
+      - 5432:5432
     networks:
       - notes
+
+  notes-keycloak-postgres:
+    container_name: notes-keycloak-postgres
+    image: postgres:15.2
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12345
+    ports:
+      - 5433:5432
+    networks:
+      - notes
+
+  notes-keycloak:
+    container_name: notes-keycloak
+    image: quay.io/keycloak/keycloak:21.0
+    environment:
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_PORT: 8443
+      KC_HOSTNAME_STRICT_BACKCHANNEL: "true"
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://notes-keycloak-postgres:5432/keycloak
+      KC_DB_USERNAME: postgres
+      KC_DB_PASSWORD: 12345
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: 12345
+      KC_HTTPS_CERTIFICATE_FILE: /opt/keycloak/conf/server.crt.pem
+      KC_HTTPS_CERTIFICATE_KEY_FILE: /opt/keycloak/conf/server.key.pem
+    volumes:
+      - ./server.crt.pem:/opt/keycloak/conf/server.crt.pem
+      - ./server.key.pem:/opt/keycloak/conf/server.key.pem
+    command: start-dev
+    ports:
+      - 8443:8443
+    networks:
+      - notes
+    depends_on:
+      - notes-keycloak-postgres
 
 networks:
   notes:
