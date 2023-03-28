@@ -52,7 +52,7 @@ public sealed class NoteFilterSpec : Specification<Note>
         if (input.Description != null)
             Query.Where(x => x.Description != null && x.Description.Contains(input.Description));
         if (input.Sort == null) return;
-        foreach (var value in input.Sort.Values)
+        foreach (var value in input.Sort)
             switch (value.Field)
             {
                 case NoteSortField.Title:

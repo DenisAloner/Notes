@@ -5,6 +5,9 @@ using Notes.CoreService.Services;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Reflection;
 using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
+using Microsoft.OpenApi.Any;
+using Notes.CoreService.DTO.Abstractions;
+using Notes.CoreService.Enums;
 
 namespace Notes.CoreService.Extensions;
 
@@ -23,9 +26,8 @@ public static partial class ServiceCollectionExtensions
             {
                 var host = keyCloakOptions.Value.Host;
                 var realm = keyCloakOptions.Value.Realm;
-                const string schemeName = "OAuth2";
-
-                options.AddSecurityDefinition(schemeName, new OpenApiSecurityScheme
+                
+                options.AddSecurityDefinition(Constants.AuthSchemeName, new OpenApiSecurityScheme
                 {
                     Type = SecuritySchemeType.OAuth2,
                     Flows = new OpenApiOAuthFlows
@@ -38,27 +40,20 @@ public static partial class ServiceCollectionExtensions
                     }
                 });
 
-                options.AddSecurityRequirement(new OpenApiSecurityRequirement
+                options.MapType(typeof(Optional<string>), () => new OpenApiSchema
                 {
-                    {
-                        new OpenApiSecurityScheme
-                        {
-                            Reference = new OpenApiReference
-                            {
-                                Type = ReferenceType.SecurityScheme,
-                                Id = schemeName
-                            }
-                        },
-                        Array.Empty<string>()
-                    }
+                    Type = "string",
+                    Example = new OpenApiString("string")
                 });
 
                 var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                 options.IncludeXmlComments(xmlPath, true);
-
-                options.OperationFilter<ErrorOperationFilter>();
+                options.ParameterFilter<SortQueryArrayParameterFilter>();
+                options.OperationFilter<OperationFilter>();
+                options.SchemaFilter<SortParameterSchemaFilter>();
                 options.DescribeAllParametersInCamelCase();
+               
             });
 
 

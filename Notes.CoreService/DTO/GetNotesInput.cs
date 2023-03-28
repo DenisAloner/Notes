@@ -13,7 +13,7 @@ public class GetNotesInput : PageInput
     public string? Description { get; set; }
 
     [ModelBinder(BinderType = typeof(SortParametersConverterModelBinder<NoteSortField>))]
-    public SortParameters<NoteSortField>? Sort { get; set; }
+    public IReadOnlyList<SortParameter<NoteSortField>>? Sort { get; set; }
 }
 
 public class GetNotesInputValidator : PageInputValidator<GetNotesInput>
